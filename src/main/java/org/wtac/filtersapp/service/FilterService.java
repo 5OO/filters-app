@@ -1,17 +1,10 @@
 package org.wtac.filtersapp.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.wtac.filtersapp.model.Filter;
-import org.wtac.filtersapp.repository.FilterRepository;
 
-@RequiredArgsConstructor
-@Service
-public class FilterService {
+import java.util.List;
 
-    private final FilterRepository filterRepository;
-
-    public Filter saveFilter(Filter filter) {
-        return filterRepository.save(filter);
-    }
+public interface FilterService {
+    Filter createFilter(Filter filter);
+    List<Filter> getAllFilters();
 }
