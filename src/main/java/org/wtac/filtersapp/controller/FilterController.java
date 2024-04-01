@@ -2,6 +2,8 @@ package org.wtac.filtersapp.controller;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wtac.filtersapp.model.Filter;
@@ -10,6 +12,7 @@ import org.wtac.filtersapp.service.FilterService;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 public class FilterController {
@@ -43,8 +46,7 @@ public class FilterController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            // Log the exception details for debugging purposes
-            e.printStackTrace();
+            log.error("An error occurred while applying the filter.", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
