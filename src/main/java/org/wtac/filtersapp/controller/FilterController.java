@@ -1,9 +1,11 @@
 package org.wtac.filtersapp.controller;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wtac.filtersapp.model.Filter;
+import org.wtac.filtersapp.model.Movie;
 import org.wtac.filtersapp.service.FilterService;
 
 import java.util.List;
@@ -31,5 +33,19 @@ public class FilterController {
         return filterService.getFilterById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/api/filters/{filterId}/movies")
+    public ResponseEntity<List<Movie>> applyFilter(@PathVariable Long filterId) {
+        try {
+            List<Movie> filteredMovies = filterService.applyFilter(filterId);
+            return ResponseEntity.ok(filteredMovies);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            // Log the exception details for debugging purposes
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
