@@ -20,7 +20,7 @@ public class Filter {
     private String name;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Criterion> criteria;
 
 }
