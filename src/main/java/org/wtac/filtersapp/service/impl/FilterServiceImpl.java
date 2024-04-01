@@ -10,6 +10,7 @@ import org.wtac.filtersapp.repository.FilterRepository;
 import org.wtac.filtersapp.service.FilterService;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -32,5 +33,11 @@ public class FilterServiceImpl implements FilterService {
     @Transactional(readOnly = true)
     public List<Filter> getAllFilters() {
         return filterRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Filter> getFilterById(Long id) {
+        return filterRepository.findById(id);
     }
 }

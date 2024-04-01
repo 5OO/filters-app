@@ -25,4 +25,11 @@ public class FilterController {
         List<Filter> filters = filterService.getAllFilters();
         return ResponseEntity.ok(filters);
     }
+
+    @GetMapping("/api/filters/{id}")
+    public ResponseEntity<Filter> getFilterById(@PathVariable Long id) {
+        return filterService.getFilterById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
