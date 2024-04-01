@@ -46,7 +46,7 @@ public class FilterController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            log.error("An error occurred while applying the filter.", e);
+            log.error("An error occurred while applying the filter with ID: {}.", filterId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
