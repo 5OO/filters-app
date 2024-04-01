@@ -1,16 +1,25 @@
 package org.wtac.filtersapp.service.impl;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.wtac.filtersapp.model.Criterion;
 import org.wtac.filtersapp.model.Filter;
-import org.wtac.filtersapp.repository.CriterionRepository;
+import org.wtac.filtersapp.model.Movie;
 import org.wtac.filtersapp.repository.FilterRepository;
 import org.wtac.filtersapp.service.FilterService;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -18,7 +27,8 @@ public class FilterServiceImpl implements FilterService {
 
 
     private final FilterRepository filterRepository;
-    private final CriterionRepository criterionRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     @Transactional
@@ -39,5 +49,95 @@ public class FilterServiceImpl implements FilterService {
     @Transactional(readOnly = true)
     public Optional<Filter> getFilterById(Long id) {
         return filterRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Movie> applyFilter(Long filterId) {
+        Optional<Filter> filterOpt = filterRepository.findById(filterId);
+        if (filterOpt.isEmpty()) {
+            throw new EntityNotFoundException("Filter with ID " + filterId + " not found");
+        }
+        Filter filter = filterOpt.get();
+        return applyCriteria(filter.getCriteria());
+    }
+
+    private List<Movie> applyCriteria(Set<Criterion> criteria) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Movie> query = cb.createQuery(Movie.class);
+        Root<Movie> movieRoot = query.from(Movie.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+        for (Criterion criterion : criteria) {
+            switch (criterion.getFieldName()) {
+                case "VOTE_AVERAGE":
+                    // Assume Criterion stores comparison as "=", ">", "<", etc.
+                    // and value as the target value for comparison
+                    Predicate votePredicate = createNumericPredicate(cb, movieRoot, criterion);
+                    predicates.add(votePredicate);
+                    break;
+                case "RELEASE_DATE":
+                    Predicate datePredicate = createDatePredicate(cb, movieRoot, criterion);
+                    predicates.add(datePredicate);
+                    break;
+                case "POPULARITY":
+                    Predicate popularityPredicate = createNumericPredicate(cb, movieRoot, criterion);
+                    predicates.add(popularityPredicate);
+                    break;
+                case "ORIGINAL_TITLE":
+                case "TITLE":
+                    Predicate titlePredicate = createStringPredicate(cb, movieRoot, criterion);
+                    predicates.add(titlePredicate);
+                    break;
+            }
+        }
+
+        query.where(cb.and(predicates.toArray(new Predicate[0])));
+        return entityManager.createQuery(query).getResultList();
+    }
+
+    private Predicate createNumericPredicate(CriteriaBuilder cb, Root<Movie> movieRoot, Criterion criterion) {
+        Path<Number> path = movieRoot.get(criterion.getFieldName());
+        String value = criterion.getCriteriaValue();
+
+        return switch (criterion.getComparisonOperator()) {
+            case ">" -> cb.gt(path, NumberUtils.createNumber(value));
+            case "<" -> cb.lt(path, NumberUtils.createNumber(value));
+            case "=" -> cb.equal(path, NumberUtils.createNumber(value));
+            default -> null;
+        };
+    }
+
+    private Predicate createDatePredicate(CriteriaBuilder cb, Root<Movie> movieRoot, Criterion criterion) {
+        LocalDate date = LocalDate.parse(criterion.getCriteriaValue(), DateTimeFormatter.ISO_LOCAL_DATE);
+        Path<LocalDate> path = movieRoot.get(criterion.getFieldName());
+
+        switch (criterion.getComparisonOperator()) {
+            case ">":
+                return cb.greaterThan(path, date);
+            case "<":
+                return cb.lessThan(path, date);
+            case "=":
+                return cb.equal(path, date);
+            case ">=":
+                return cb.greaterThanOrEqualTo(path, date);
+            case "<=":
+                return cb.lessThanOrEqualTo(path, date);
+            default:
+                throw new IllegalArgumentException("Unsupported comparison operator: " + criterion.getComparisonOperator());
+        }
+    }
+
+    private Predicate createStringPredicate(CriteriaBuilder cb, Root<Movie> movieRoot, Criterion criterion) {
+        Expression<String> path = movieRoot.get(criterion.getFieldName());
+        String value = criterion.getCriteriaValue();
+
+        return switch (criterion.getComparisonOperator()) {
+            case "contains" -> cb.like(cb.lower(path), "%" + value.toLowerCase() + "%");
+            case "startsWith" -> cb.like(cb.lower(path), value.toLowerCase() + "%");
+            case "endsWith" -> cb.like(cb.lower(path), "%" + value.toLowerCase());
+            case "equals" -> cb.equal(cb.lower(path), value.toLowerCase());
+            default ->
+                    throw new IllegalArgumentException("Unsupported comparison operator: " + criterion.getComparisonOperator());
+        };
     }
 }
