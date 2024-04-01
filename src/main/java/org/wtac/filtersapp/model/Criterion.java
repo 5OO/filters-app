@@ -1,5 +1,6 @@
 package org.wtac.filtersapp.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +14,7 @@ public class Criterion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "filter_id", nullable = false)
     private Filter filter;

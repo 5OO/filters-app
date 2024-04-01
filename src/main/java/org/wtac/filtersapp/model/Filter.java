@@ -1,5 +1,6 @@
 package org.wtac.filtersapp.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,7 @@ public class Filter {
     @Column(nullable = false)
     private String name;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Criterion> criteria;
 
