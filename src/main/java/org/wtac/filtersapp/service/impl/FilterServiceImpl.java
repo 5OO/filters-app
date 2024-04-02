@@ -70,8 +70,6 @@ public class FilterServiceImpl implements FilterService {
         for (Criterion criterion : criteria) {
             switch (criterion.getFieldName()) {
                 case "voteAverage":
-                    // Assume Criterion stores comparison as "=", ">", "<", etc.
-                    // and value as the target value for comparison
                     Predicate votePredicate = createNumericPredicate(cb, movieRoot, criterion);
                     predicates.add(votePredicate);
                     break;
@@ -90,7 +88,6 @@ public class FilterServiceImpl implements FilterService {
                     break;
             }
         }
-
         query.where(cb.and(predicates.toArray(new Predicate[0])));
         return entityManager.createQuery(query).getResultList();
     }
@@ -111,22 +108,15 @@ public class FilterServiceImpl implements FilterService {
         LocalDate date = LocalDate.parse(criterion.getCriteriaValue(), DateTimeFormatter.ISO_LOCAL_DATE);
         Path<LocalDate> path = movieRoot.get(criterion.getFieldName());
 
-        switch (criterion.getComparisonOperator()) {
-            case ">":
-            case "after":
-                return cb.greaterThan(path, date);
-            case "<":
-            case "before":
-                return cb.lessThan(path, date);
-            case "=":
-                return cb.equal(path, date);
-            case ">=":
-                return cb.greaterThanOrEqualTo(path, date);
-            case "<=":
-                return cb.lessThanOrEqualTo(path, date);
-            default:
-                throw new IllegalArgumentException("Unsupported comparison operator: " + criterion.getComparisonOperator());
-        }
+        return switch (criterion.getComparisonOperator()) {
+            case ">", "after" -> cb.greaterThan(path, date);
+            case "<", "before" -> cb.lessThan(path, date);
+            case "=" -> cb.equal(path, date);
+            case ">=" -> cb.greaterThanOrEqualTo(path, date);
+            case "<=" -> cb.lessThanOrEqualTo(path, date);
+            default ->
+                    throw new IllegalArgumentException("Unsupported comparison operator: " + criterion.getComparisonOperator());
+        };
     }
 
     private Predicate createStringPredicate(CriteriaBuilder cb, Root<Movie> movieRoot, Criterion criterion) {
