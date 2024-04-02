@@ -69,22 +69,22 @@ public class FilterServiceImpl implements FilterService {
         List<Predicate> predicates = new ArrayList<>();
         for (Criterion criterion : criteria) {
             switch (criterion.getFieldName()) {
-                case "VOTE_AVERAGE":
+                case "voteAverage":
                     // Assume Criterion stores comparison as "=", ">", "<", etc.
                     // and value as the target value for comparison
                     Predicate votePredicate = createNumericPredicate(cb, movieRoot, criterion);
                     predicates.add(votePredicate);
                     break;
-                case "RELEASE_DATE":
+                case "releaseDate":
                     Predicate datePredicate = createDatePredicate(cb, movieRoot, criterion);
                     predicates.add(datePredicate);
                     break;
-                case "POPULARITY":
+                case "popularity":
                     Predicate popularityPredicate = createNumericPredicate(cb, movieRoot, criterion);
                     predicates.add(popularityPredicate);
                     break;
-                case "ORIGINAL_TITLE":
-                case "TITLE":
+                case "originalTitle":
+                case "title":
                     Predicate titlePredicate = createStringPredicate(cb, movieRoot, criterion);
                     predicates.add(titlePredicate);
                     break;
@@ -113,8 +113,10 @@ public class FilterServiceImpl implements FilterService {
 
         switch (criterion.getComparisonOperator()) {
             case ">":
+            case "after":
                 return cb.greaterThan(path, date);
             case "<":
+            case "before":
                 return cb.lessThan(path, date);
             case "=":
                 return cb.equal(path, date);
