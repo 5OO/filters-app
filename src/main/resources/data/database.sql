@@ -1,3 +1,23 @@
+-- Filter table content
+INSERT INTO filter (id, name) VALUES
+                                  (1, 'High Rated Movies'),
+                                  (2, 'Second Filter'),
+                                  (3, 'Complex Movie Filter'),
+                                  (4, 'A filter');
+
+-- Criterion table content
+INSERT INTO criterion (id, filter_id, field_name, criteria_type, comparison_operator, criteria_value) VALUES
+                                                                                                          (1, 1, 'voteAverage', 'numeric', '>', '7.5'),
+                                                                                                          (2, 2, 'voteAverage', 'numeric', '<', '5.5'),
+                                                                                                          (3, 3, 'title', 'string', 'contains', 'a'),
+                                                                                                          (4, 3, 'popularity', 'numeric', '>', '11'),
+                                                                                                          (5, 3, 'voteAverage', 'numeric', '>', '3'),
+                                                                                                          (6, 3, 'originalTitle', 'string', 'contains', 'man'),
+                                                                                                          (7, 3, 'releaseDate', 'date', '>', '2015-01-01'),
+                                                                                                          (8, 4, 'title', 'string', 'startsWith', 'a');
+
+-- MOVIE table content
+
 INSERT INTO movie(original_title, overview, popularity, release_date, revenue, runtime, tagline, title, vote_average,
                   vote_count)
 VALUES ('Avatar',
