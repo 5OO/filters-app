@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -21,6 +22,6 @@ public class Filter {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<Criterion> criteria;
+    private Set<Criterion> criteria = new HashSet<>();
 
 }

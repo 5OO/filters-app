@@ -35,10 +35,23 @@ public class FilterServiceImpl implements FilterService {
     @Override
     @Transactional
     public Filter createFilter(Filter filter) {
-        for (Criterion criterion : filter.getCriteria()) {
-            criterion.setFilter(filter);
+        if (filter.getCriteria() != null) {
+            for (Criterion criterion : filter.getCriteria()) {
+                String criteriaType = determineCriteriaType(criterion.getFieldName());
+                criterion.setCriteriaType(criteriaType);
+                criterion.setFilter(filter);
+            }
         }
         return filterRepository.save(filter);
+    }
+
+    private String determineCriteriaType(String fieldName) {
+        return switch (fieldName) {
+            case "title", "originalTitle" -> "string";
+            case "releaseDate" -> "date";
+            case "voteAverage", "popularity" -> "numeric";
+            default -> throw new IllegalArgumentException("Unsupported field name: " + fieldName);
+        };
     }
 
     @Override
@@ -83,10 +96,12 @@ public class FilterServiceImpl implements FilterService {
                     Predicate popularityPredicate = createNumericPredicate(cb, movieRoot, criterion);
                     predicates.add(popularityPredicate);
                     break;
-                case "originalTitle":
-                case "title":
+                case "originalTitle", "title":
                     Predicate titlePredicate = createStringPredicate(cb, movieRoot, criterion);
                     predicates.add(titlePredicate);
+                    break;
+                default:
+                    log.warn("Unrecognized field name: {}", criterion.getFieldName());
                     break;
             }
         }
