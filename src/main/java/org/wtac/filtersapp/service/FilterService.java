@@ -8,7 +8,10 @@ import java.util.Optional;
 
 public interface FilterService {
     Filter createFilter(Filter filter);
+
     List<Filter> getAllFilters();
+
     Optional<Filter> getFilterById(Long id);
+
     List<Movie> applyFilter(Long filterId);
 }
